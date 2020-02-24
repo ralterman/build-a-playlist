@@ -7,6 +7,13 @@ import pickle
 import matplotlib.pyplot as plt
 import seaborn as sns
 import time
+from sklearn.preprocessing import MinMaxScaler
+from surprise import Dataset, Reader
+from surprise import SVD
+from surprise import accuracy
+from surprise.model_selection import cross_validate, train_test_split
+from surprise import NormalPredictor
+from surprise.model_selection import GridSearchCV
 
 
 client_credentials_manager = SpotifyClientCredentials(client_id=config.client_id, client_secret=config.client_secret)
@@ -119,10 +126,18 @@ len(all)
 
 
 master_df = pd.DataFrame(all, columns=['playlist_ID', 'artist_ID'])
-master_counts = pd.DataFrame({'count': master_df.groupby(['playlist_ID', 'artist_ID']).size()}).reset_index()
-master_counts.shape
 
-pickle.dump(master_counts, open('master_counts.pkl', 'wb'))
+artists_counts = master_df.groupby('playlist_ID').count()
+master_counts = pd.DataFrame({'count': master_df.groupby(['playlist_ID', 'artist_ID']).size()}).reset_index()
+
+master = pd.merge(master_counts, artists_counts, how='right', on='playlist_ID')
+master = master.rename(columns={'artist_ID_x': 'artist_ID', 'artist_ID_y': 'total'})
+
+master['scaled'] = master['count'] / master['total']
+master = master.dropna()
+
+
+pickle.dump(master, open('master.pkl', 'wb'))
 
 
 
@@ -130,5 +145,16 @@ pickle.dump(master_counts, open('master_counts.pkl', 'wb'))
 
 
 
-master_counts = pickle.load(open('master_counts.pkl', 'rb'))
-master_counts.shape
+master = pickle.load(open('master.pkl', 'rb'))
+
+
+reader = Reader(rating_scale=(0, 1))
+data = Dataset.load_from_df(master[['playlist_ID', 'artist_ID', 'scaled']], reader)
+trainset, testset = train_test_split(data, test_size=.2)
+
+
+svd = SVD()
+svd.fit(trainset)
+predictions = svd.test(testset)
+
+accuracy.rmse(predictions)
