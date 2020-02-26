@@ -16,6 +16,7 @@ from surprise import NormalPredictor
 from surprise.model_selection import GridSearchCV
 
 
+
 client_credentials_manager = SpotifyClientCredentials(client_id=config.client_id, client_secret=config.client_secret)
 sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
 
@@ -158,3 +159,9 @@ svd.fit(trainset)
 predictions = svd.test(testset)
 
 accuracy.rmse(predictions)
+accuracy.mae(predictions)
+
+
+param_grid = {'n_factors': [50, 150], 'n_epochs': [10, 30], 'lr_all': [0.004, 0.006], 'reg_all': [0.01, 0.03]}
+gs1 = GridSearchCV(SVD, param_grid=param_grid, joblib_verbose=100)
+gs1.fit(data)
