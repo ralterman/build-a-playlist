@@ -14,6 +14,7 @@ from surprise import accuracy
 from surprise.model_selection import cross_validate, train_test_split
 from surprise import NormalPredictor
 from surprise.model_selection import GridSearchCV
+tqdm.pandas()
 
 
 
@@ -76,6 +77,9 @@ for g in unique_playlists:
 plt.figure(figsize=(15,7))
 sns.barplot(list(genre_counts.keys()), list(genre_counts.values()))
 plt.xticks(rotation=45)
+plt.title('Playlist Count by Search Term (Genre)', fontsize=24)
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
 
 
 
@@ -118,7 +122,7 @@ def get_artists(playlist_id_dict):
         genre_number += 1
     return all_artists
 
-# artists_per_playlist = get_artists(playlists_per_genre)
+# artists_per_playlist = get_artists(unique_playlists)
 
 
 artists_per_playlist = pickle.load(open('artist_tuples_list.pkl', 'rb'))
@@ -149,8 +153,85 @@ pickle.dump(master, open('master.pkl', 'wb'))
 master = pickle.load(open('master.pkl', 'rb'))
 
 
+master.scaled.hist()
+plt.ylim(ymin=0, ymax=60000)
+
+master.total.hist()
+
+
+master = master[(master.total >= 20) & (master.total <= 500)]
+
+
+bad_rows = master[master['scaled'] > .40].index.tolist()
+
+bad_playlists = []
+for i in bad_rows:
+    bad_playlists.append(master.loc[i, 'playlist_ID'])
+
+unique_bad_playlists = list(set(bad_playlists))
+
+
+master['good_scale'] = master.playlist_ID.progress_apply(lambda x: 0 if x in unique_bad_playlists else 1)
+
+
+remastered = master[master.good_scale == 1]
+
+remastered.playlist_ID.nunique()
+remastered.artist_ID.nunique()
+
+cols = remastered.columns.tolist()
+cols = ['artist_ID', 'playlist_ID', 'count', 'total', 'scaled', 'good_scale']
+remastered = remastered[cols]
+
+
+pickle.dump(remastered, open('remastered.pkl', 'wb'))
+
+
+
+#------------------------------------------------------------------------------------------
+
+
+
+remastered = pickle.load(open('remastered.pkl', 'rb'))
+
+remastered.head()
+
+occurences = pd.DataFrame(remastered['artist_ID'].value_counts()).reset_index()
+occurences = occurences.rename(columns={'index':'artist_ID', 'artist_ID':'appearances'})
+
+occurences.appearances.describe()
+
+new_master = pd.merge(remastered, occurences, how='right', on='artist_ID')
+
+
+bad_rows2 = new_master[new_master['appearances'] < 5].index.tolist()
+
+bad_playlists2 = []
+for i in bad_rows2:
+    bad_playlists2.append(new_master.loc[i, 'playlist_ID'])
+
+unique_bad_playlists2 = list(set(bad_playlists2))
+
+
+new_master = new_master[new_master.appearances >= 5]
+
+new_master['contains_nonpopular'] = new_master.playlist_ID.progress_apply(lambda x: 1 if x in unique_bad_playlists2 else 0)
+
+new_remastered = new_master[new_master.contains_nonpopular == 0]
+
+
+pickle.dump(new_remastered, open('new_remastered.pkl', 'wb'))
+
+
+
+#------------------------------------------------------------------------------------------
+
+
+
+new_remastered = pickle.load(open('new_remastered.pkl', 'rb'))
+
 reader = Reader(rating_scale=(0, 1))
-data = Dataset.load_from_df(master[['playlist_ID', 'artist_ID', 'scaled']], reader)
+data = Dataset.load_from_df(master[['artist_ID', 'playlist_ID', 'scaled']], reader)
 trainset, testset = train_test_split(data, test_size=.2)
 
 
@@ -163,5 +244,69 @@ accuracy.mae(predictions)
 
 
 param_grid = {'n_factors': [50, 150], 'n_epochs': [10, 30], 'lr_all': [0.004, 0.006], 'reg_all': [0.01, 0.03]}
-gs1 = GridSearchCV(SVD, param_grid=param_grid, joblib_verbose=100)
+gs1 = GridSearchCV(SVD, param_grid=param_grid, cv=3, joblib_verbose=5)
 gs1.fit(data)
+
+
+gs1.best_score['rmse'])
+gs1.best_params['rmse'])
+
+
+
+#------------------------------------------------------------------------------------------
+
+
+
+artists_per_playlist = pickle.load(open('artist_tuples_list.pkl', 'rb'))
+
+all_artists = list(set([item[1] for sublist in artists_per_playlist for item in sublist]))
+
+
+artist_dict = {}
+for artist in tqdm(all_artists):
+    try:
+        name = sp.artist(artist)['name']
+    except:
+        continue
+    artist_dict[name] = artist
+    time.sleep(.2)
+
+
+pickle.dump(artist_dict, open('artists.pkl', 'wb'))
+
+
+
+def label_genre(row, genre_dict):
+    if row['playlist_ID'] in genre_dict['Alternative/Indie']:
+        return 'Alternative/Indie'
+    elif row['playlist_ID'] in genre_dict['Blues']:
+        return 'Blues'
+    elif row['playlist_ID'] in genre_dict['Classical']:
+        return 'Classical'
+    elif row['playlist_ID'] in genre_dict['Country']:
+        return 'Country'
+    elif row['playlist_ID'] in genre_dict['EDM']:
+        return 'EDM'
+    elif row['playlist_ID'] in genre_dict['Hip-Hop/Rap']:
+        return 'Hip-Hop/Rap'
+    elif row['playlist_ID'] in genre_dict['Jazz']:
+        return 'Jazz'
+    elif row['playlist_ID'] in genre_dict['K-Pop']:
+        return 'K-Pop'
+    elif row['playlist_ID'] in genre_dict['Latin']:
+        return 'Latin'
+    elif row['playlist_ID'] in genre_dict['Metal']:
+        return 'Metal'
+    elif row['playlist_ID'] in genre_dict['Pop']:
+        return 'Pop'
+    elif row['playlist_ID'] in genre_dict['R&B']:
+        return 'R&B'
+    elif row['playlist_ID'] in genre_dict['Reggae']:
+        return 'Reggae'
+    elif row['playlist_ID'] in genre_dict['Rock']:
+        return 'Rock'
+
+new_remastered['genre'] = new_remastered.apply(lambda row: label_genre(row, unique_playlists), axis=1)
+
+
+# {'name': (artist_id, [list of genres of the playlists that artist is in])}
