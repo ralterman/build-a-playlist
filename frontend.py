@@ -1,3 +1,4 @@
+import streamlit as st
 from functions import artist_info
 from functions import unique_playlists
 from functions import get_predictions
@@ -10,41 +11,28 @@ import surprise
 from surprise import SVD
 import pickle
 
-final_model = pickle.load(open('final_model.pkl', 'rb'))
+
+st.markdown("<h1 style='text-align: center; color: rgb(29,185,84); font: Proxima Nova; font-size: 75px;''>Welcome to <i>playlist.append()</i></h1>", unsafe_allow_html=True)
+st.markdown("<h3 style='text-align: center; color: black; font: Proxima Nova; font-size: 25px;''>Create your own Spotify playlist in just two steps</i></h1>", unsafe_allow_html=True)
+# st.title('Welcome to playlist.append()!')
+st.write('')
+st.write('')
+st.write('')
+st.write('')
+# artist_list = st.multiselect("Pick 1-5 artists", sorted(list(artist_info.keys()), key=str.lower))
+artist_list = st.multiselect('Enter up to 5 artists:', sorted(['Drake', 'Kendrick Lamar', 'J. Cole', 'Kanye West', 'Lil Wayne', 'Eminem'], key=str.lower))
+st.write('')
+if len(artist_list) > 5:
+    st.write("I'm sorry, you can only pick 5 artists at most.")
+    st.write('')
+username = st.text_input('Enter your name:')
+st.write('')
+st.write('')
+st.write('')
+st.write('')
 
 
-def main():
-    pick = True
-    artist_list = []
-    while pick == True:
-        print('')
-        print('')
-        artist = input('Pick an artist: ')
-        while artist not in artist_info:
-            artist = input("I'm sorry, I don't recognize that artist. Please pick a different artist: ")
-        artist_list.append(artist)
-        add = input('Would you like to pick another artist? [y/n]: ')
-        if (add != 'y') and (add != 'n'):
-            add = input("I'm sorry, I didn't quite get that. Would you like to pick another artist? [y/n]: ")
-            print('')
-        while (add == 'y') and (len(artist_list) < 5):
-            print('')
-            artist = input('Pick another artist: ')
-            while artist not in artist_info:
-                artist = input("I'm sorry, I don't recognize that artist. Please pick a different artist: ")
-            artist_list.append(artist)
-            if len(artist_list) < 5:
-                add = input('Would you like to pick another artist? [y/n]: ')
-                if (add != 'y') and (add != 'n'):
-                    add = input("I'm sorry, I didn't quite get that. Would you like to pick another artist? [y/n]: ")
-        print('')
-        pick = False
-
-    print('')
-    username = input('Please enter your name: ')
-    print('')
-    print('')
-
+if (len(artist_list) > 0) and (username != ''):
 
     predicted_playlists = []
     for artist_name in artist_list:
@@ -102,17 +90,8 @@ def main():
         sp.trace = False
         new_playlist = sp.user_playlist_create(config.user, playlist_name, description='Strictly bangers, brought to you by playlist.append()')
         results = sp.user_playlist_add_tracks(config.user, new_playlist['id'], all_tracks[:50])
-        print('Your playlist is ready!')
-        print('')
-        print('Here is the link to your playlist: ' + new_playlist['external_urls']['spotify'])
-        print('')
-        print('')
+        st.write('Your playlist is ready, ' + username + '!')
+        st.write('')
+        st.write('Here is the link to your playlist:     ' + new_playlist['external_urls']['spotify'])
     else:
-        print("Can't get token for", username)
-        print('')
-        print('')
-
-
-
-if __name__== "__main__":
-    main()
+        st.write("Can't get token for", username)

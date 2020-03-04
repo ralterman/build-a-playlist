@@ -22,15 +22,17 @@ def get_predictions(artist, list_of_playlists, num_selections):
     rankings = []
     for playlist in list_of_playlists:
         prediction = final_model.predict(artist, playlist)
-        rankings.append((prediction.iid, prediction.est))
+        if prediction.r_ui != None:
+            rankings.append((prediction.iid, prediction.r_ui))
+        else:
+            rankings.append((prediction.iid, prediction.est))
     sorted_rankings = sorted(rankings, reverse=True, key=lambda x: x[1])[:num_selections]
     return sorted_rankings
 
-bipolar_sunshine = get_predictions('0CjWKoS55T7DOt0HJuwF1H', unique_playlists['EDM'], 6)
 
-bipolar_sunshine
 
 def get_tracks(playlist_id):
+    bad = ['Piano Arrangement', 'Piano Version', '(Cover)', '[Cover]']
     songs = []
     offset = 0
     count = 0
@@ -41,7 +43,14 @@ def get_tracks(playlist_id):
             while idx < len(tracks['items']):
                 count += 1
                 track_id = tracks['items'][idx]['track']['id']
-                songs.append(track_id)
+                name = tracks['items'][idx]['track']['name']
+                artists = tracks['items'][idx]['track']['artists']
+                idx2 = 0
+                if not any(word in name for word in bad):
+                    while idx2 < len(artists):
+                        if 'Piano' not in artists[idx2]['name']:
+                            songs.append(track_id)
+                        idx2 += 1
                 idx += 1
             offset += 100
             tracks = sp.playlist_tracks(playlist_id, offset=offset)

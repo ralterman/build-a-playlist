@@ -69,8 +69,8 @@ count = []
 for g in unique_playlists:
     count.extend(unique_playlists[g])
 
-# print (len(count))
-# print (len(set(count)))
+print (len(count))
+print (len(set(count)))
 
 
 # Create bar chart of genres and playlist counts
@@ -158,8 +158,9 @@ pickle.dump(master, open('master.pkl', 'wb'))
 master = pickle.load(open('master.pkl', 'rb'))
 
 
-master.scaled.hist()
-plt.ylim(ymin=0, ymax=60000)
+master.scaled.hist(bins=20)
+plt.ylim(ymin=0, ymax=100000)
+plt.xlim(xmin=0, xmax=.50)
 
 master.total.hist()
 
@@ -167,7 +168,7 @@ master.total.hist()
 master = master[(master.total >= 20) & (master.total <= 500)]
 
 
-bad_rows = master[master['scaled'] > .40].index.tolist()
+bad_rows = master[master['scaled'] > .10].index.tolist()
 
 bad_playlists = []
 for i in bad_rows:
@@ -176,12 +177,12 @@ for i in bad_rows:
 unique_bad_playlists = list(set(bad_playlists))
 
 
-remastered = master[master.scaled <= .40]
+remastered = master[master.scaled <= .10]
 
 remastered['good_scale'] = remastered.playlist_ID.progress_apply(lambda x: 0 if x in unique_bad_playlists else 1)
 
 
-remastered = master[master.good_scale == 1]
+remastered = remastered[remastered.good_scale == 1]
 
 remastered.playlist_ID.nunique()
 remastered.artist_ID.nunique()
@@ -207,10 +208,14 @@ occurences = occurences.rename(columns={'index':'artist_ID', 'artist_ID':'appear
 
 occurences.appearances.describe()
 
+occurences.appearances.hist(bins=1000)
+plt.ylim(ymin=0, ymax=5000)
+plt.xlim(xmin=20, xmax=100)
+
 new_master = pd.merge(remastered, occurences, how='right', on='artist_ID')
 
 
-bad_rows2 = new_master[new_master['appearances'] < 5].index.tolist()
+bad_rows2 = new_master[new_master['appearances'] < 30].index.tolist()
 
 bad_playlists2 = []
 for i in bad_rows2:
@@ -219,7 +224,7 @@ for i in bad_rows2:
 unique_bad_playlists2 = list(set(bad_playlists2))
 
 
-new_master = new_master[new_master.appearances >= 5]
+new_master = new_master[new_master.appearances >= 30]
 
 new_master['contains_nonpopular'] = new_master.playlist_ID.progress_apply(lambda x: 1 if x in unique_bad_playlists2 else 0)
 
@@ -230,109 +235,39 @@ new_remastered.playlist_ID.nunique()
 new_remastered.artist_ID.nunique()
 
 
-pickle.dump(new_remastered, open('new_remastered.pkl', 'wb'))
+pickle.dump(new_remastered, open('new_remastered2.pkl', 'wb'))
+
+new_remastered
+
+unique = pd.DataFrame(new_remastered.groupby('playlist_ID'))
+
+playlist_list = unique[0].tolist()
+
+len(playlist_list)
+
+len(unique_playlists['EDM'])
+len(unique_playlists['Hip-Hop/Rap'])
+
+l = ['a', 'c', 'e', 'g']
+new = {'Rob': ['a', 'b', 'c', 'd'], 'Grace': ['d', 'e', 'f', 'g']}
+
+for name in new:
+    for letter in new[name]:
+        if letter not in l:
+            new[name].remove(letter)
+
+len(set(playlist_list))
+new
+
+playlist_list
+
+for genre in unique_playlists:
+    for p in unique_playlists[genre]:
+        if p not in playlist_list:
+            unique_playlists[genre].remove(p)
 
 
-
-#------------------------------------------------------------------------------------------
-
-
-
-new_remastered = pickle.load(open('new_remastered.pkl', 'rb'))
-
-reader = Reader(rating_scale=(0, 1))
-data = Dataset.load_from_df(new_remastered[['artist_ID', 'playlist_ID', 'scaled']], reader)
-trainset, testset = train_test_split(data, test_size=.2)
-
-
-svd = SVD(n_factors=0, n_epochs=50, lr_all=0.009, reg_all=0.09)
-final = svd.fit(trainset)
-pickle.dump(final, open('final_model.pkl', 'wb'))
-
-predictions = final.test(testset)
-
-accuracy.rmse(predictions)
-accuracy.mae(predictions)
-
-
-
-param_grid = {'n_factors': [50, 100, 150], 'n_epochs': [10, 20, 30], 'lr_all': [0.004, 0.005, 0.006], 'reg_all': [0.01, 0.02, 0.03]}
-gs1 = GridSearchCV(SVD, param_grid=param_grid, cv=3, joblib_verbose=100)
-gs1.fit(data)
-
-gs1.best_score['rmse']
-gs1.best_score['mae']
-gs1.best_params['rmse']
-
-
-
-param_grid = {'n_factors': [50, 25], 'n_epochs': [30, 40], 'lr_all': [0.006, 0.007], 'reg_all': [0.03, 0.04]}
-gs2 = GridSearchCV(SVD, param_grid=param_grid, cv=3, joblib_verbose=100)
-gs2.fit(data)
-
-gs2.best_score['rmse']
-gs2.best_score['mae']
-gs2.best_params['rmse']
-
-
-
-param_grid = {'n_factors': [25, 1], 'n_epochs': [40, 60], 'lr_all': [0.007, 0.010], 'reg_all': [0.04, 0.10]}
-gs3 = GridSearchCV(SVD, param_grid=param_grid, cv=3, joblib_verbose=100)
-gs3.fit(data)
-
-gs3.best_score['rmse']
-gs3.best_score['mae']
-gs3.best_params['rmse']
-
-
-
-param_grid = {'n_factors': [1, 2], 'n_epochs': [60, 100], 'lr_all': [0.01, 0.02], 'reg_all': [0.1, 0.2]}
-gs4 = GridSearchCV(SVD, param_grid=param_grid, cv=3, joblib_verbose=100)
-gs4.fit(data)
-
-gs4.best_score['rmse']
-gs4.best_score['mae']
-gs4.best_params['rmse']
-
-
-
-param_grid = {'n_factors': [1, 0], 'n_epochs': [50, 60, 70], 'lr_all': [0.009, 0.01, 0.015], 'reg_all': [0.09, 0.1, 0.15]}
-gs4 = GridSearchCV(SVD, param_grid=param_grid, cv=3, joblib_verbose=100)
-gs4.fit(data)
-
-gs4.best_score['rmse']
-gs4.best_score['mae']
-gs4.best_params['rmse']
-
-
-
-param_grid = {'n_factors': [0], 'n_epochs': [50, 55], 'lr_all': [0.008, 0.009], 'reg_all': [0.08, 0.09]}
-gs5 = GridSearchCV(SVD, param_grid=param_grid, cv=3, joblib_verbose=100)
-gs5.fit(data)
-
-gs5.best_score['rmse']
-gs5.best_score['mae']
-gs5.best_params['rmse']
-
-
-
-param_grid = {'n_factors': [0], 'n_epochs': [52, 55], 'lr_all': [0.007, 0.008], 'reg_all': [0.07, 0.08]}
-gs6 = GridSearchCV(SVD, param_grid=param_grid, cv=3, joblib_verbose=100)
-gs6.fit(data)
-
-gs6.best_score['rmse']
-gs6.best_score['mae']
-gs6.best_params['rmse']
-
-
-
-param_grid = {'n_factors': [0], 'n_epochs': [54, 55], 'lr_all': [0.007, 0.008], 'reg_all': [0.06, 0.07]}
-gs7 = GridSearchCV(SVD, param_grid=param_grid, cv=3, joblib_verbose=100)
-gs7.fit(data)
-
-gs7.best_score['rmse']
-gs7.best_score['mae']
-gs7.best_params['rmse']
+len(unique_playlists['EDM'])
 
 
 
@@ -425,7 +360,40 @@ pickle.dump(artist_info, open('artist_info.pkl', 'wb'))
 
 
 #------------------------------------------------------------------------------------------
-final
+
+
+
+new_remastered2.sort_values(by='total')
+
+new_remastered2 = pickle.load(open('new_remastered2.pkl', 'rb'))
+
+reader = Reader(rating_scale=(0, 1))
+data = Dataset.load_from_df(new_remastered2[['artist_ID', 'playlist_ID', 'scaled']], reader)
+trainset, testset = train_test_split(data, test_size=.01)
+
+
+svd = SVD(n_factors=0, n_epochs=50, lr_all=0.009, reg_all=0.09)
+final = svd.fit(trainset)
+pickle.dump(final, open('final_model2.pkl', 'wb'))
+
+predictions = final.test(testset)
+
+accuracy.rmse(predictions)
+accuracy.mae(predictions)
+
+
+param_grid = {'n_factors': [1, 0], 'n_epochs': [50, 60, 70], 'lr_all': [0.009, 0.01, 0.015], 'reg_all': [0.09, 0.1, 0.15]}
+gs4 = GridSearchCV(SVD, param_grid=param_grid, cv=3, joblib_verbose=100)
+gs4.fit(data)
+
+gs4.best_score['rmse']
+gs4.best_score['mae']
+gs4.best_params['rmse']
+
+
+
+#------------------------------------------------------------------------------------------
+
 
 
 artist_info = pickle.load(open('artist_info.pkl', 'rb'))
@@ -435,22 +403,39 @@ def get_predictions(artist, list_of_playlists, num_selections):
     rankings = []
     for playlist in list_of_playlists:
         prediction = final.predict(artist, playlist)
-        rankings.append((prediction.iid, prediction.est))
+        if prediction.r_ui != None:
+            rankings.append((prediction.iid, prediction.r_ui))
+        else:
+            rankings.append((prediction.iid, prediction.est))
     sorted_rankings = sorted(rankings, reverse=True, key=lambda x: x[1])[:num_selections]
     return sorted_rankings
 
-bipolar_sunshine = get_predictions('0CjWKoS55T7DOt0HJuwF1H', unique_playlists['EDM'], 6)
 
-bipolar_sunshine
+drake = get_predictions('3TVXtAsR1Inumwj472S9r4', unique_playlists['Hip-Hop/Rap'], 5)
 
-    # playlists = get_predictions(artist_info[user_input][0], artist_info[user_input][1])
+drake
+youngthug = get_predictions('50co4Is1HCEo8bhOyUWKpn', unique_playlists['Hip-Hop/Rap'], 5)
 
-x = sp.playlist('3Di88mvYplBtkDBIzGLiiM')
-x
+youngthug
 
-# artist_dict_reverse = {y:x for x,y in artist_dict.items()}
+uzi = get_predictions('4O15NlyKLIASxsJ0PrXPfz', unique_playlists['Hip-Hop/Rap'], 2)
+uzi
 
-# {'name': (artist_id, [list of genres of the playlists that artist is in])}
+kidcudi = get_predictions('0fA0VVWsXO9YnASrzqfmYu', unique_playlists['Hip-Hop/Rap'], 2)
+kidcudi
+
+lupe = get_predictions('01QTIT5P1pFP3QnnFSdsJf', unique_playlists['Hip-Hop/Rap'], 2)
+lupe
+
+odesza = get_predictions('21mKp7DqtSNHhCAU2ugvUw', unique_playlists['EDM'], 2)
+odesza
+
+flume = get_predictions('6nxWCVXbOlEVRexSbLsTer', unique_playlists['EDM'], 2)
+flume
+
+
+garrix = get_predictions('60d24wfXkVzDSfLS6hyCjZ', unique_playlists['EDM'], 2)
+garrix
 
 
 
@@ -459,6 +444,7 @@ x
 
 
 def get_tracks(playlist_id):
+    bad = ['Piano Arrangement', 'Piano Version', '(Cover)', '[Cover]']
     songs = []
     offset = 0
     count = 0
@@ -469,7 +455,14 @@ def get_tracks(playlist_id):
             while idx < len(tracks['items']):
                 count += 1
                 track_id = tracks['items'][idx]['track']['id']
-                songs.append(track_id)
+                name = tracks['items'][idx]['track']['name']
+                artists = tracks['items'][idx]['track']['artists']
+                idx2 = 0
+                if not any(word in name for word in bad):
+                    while idx2 < len(artists):
+                        if 'Piano' not in artists[idx2]['name']:
+                            songs.append(track_id)
+                        idx2 += 1
                 idx += 1
             offset += 100
             tracks = sp.playlist_tracks(playlist_id, offset=offset)
@@ -477,10 +470,9 @@ def get_tracks(playlist_id):
             break
     return list(set(songs))
 
-edm_playlist = get_tracks('3Di88mvYplBtkDBIzGLiiM')
-edm_playlist
 
 
+#------------------------------------------------------------------------------------------
 
 
 
