@@ -1,5 +1,5 @@
 from functions import artist_info
-from functions import unique_playlists
+from functions import genre_dict
 from functions import get_predictions
 from functions import get_tracks
 import random
@@ -10,7 +10,7 @@ import surprise
 from surprise import SVD
 import pickle
 
-final_model = pickle.load(open('final_model.pkl', 'rb'))
+final_model = pickle.load(open('final_model3.pkl', 'rb'))
 
 
 def main():
@@ -49,20 +49,20 @@ def main():
     predicted_playlists = []
     for artist_name in artist_list:
         if len(artist_list) == 1:
-            predictions = get_predictions(artist_info[artist_name][0], unique_playlists[artist_info[artist_name][1]], 50)
+            predictions = get_predictions(artist_info[artist_name][0], genre_dict[artist_info[artist_name][1]], 50)
             preds = random.choices(predictions, k=10)
         elif len(artist_list) == 2:
-            predictions = get_predictions(artist_info[artist_name][0], unique_playlists[artist_info[artist_name][1]], 50)
+            predictions = get_predictions(artist_info[artist_name][0], genre_dict[artist_info[artist_name][1]], 60)
             preds = random.choices(predictions, k=10)
         elif len(artist_list) == 3:
-            predictions = get_predictions(artist_info[artist_name][0], unique_playlists[artist_info[artist_name][1]], 25)
+            predictions = get_predictions(artist_info[artist_name][0], genre_dict[artist_info[artist_name][1]], 55)
             preds = random.choices(predictions, k=5)
         elif len(artist_list) == 4:
-            predictions = get_predictions(artist_info[artist_name][0], unique_playlists[artist_info[artist_name][1]], 25)
+            predictions = get_predictions(artist_info[artist_name][0], genre_dict[artist_info[artist_name][1]], 60)
             preds = random.choices(predictions, k=5)
         elif len(artist_list) == 5:
-            predictions = get_predictions(artist_info[artist_name][0], unique_playlists[artist_info[artist_name][1]], 30)
-            preds = random.choices(predictions, k=6)
+            predictions = get_predictions(artist_info[artist_name][0], genre_dict[artist_info[artist_name][1]], 65)
+            preds = random.choices(predictions, k=5)
         for item in preds:
             if item[0] not in predicted_playlists:
                 predicted_playlists.append(item[0])
@@ -72,10 +72,14 @@ def main():
     all_tracks = []
     for playlistID in predicted_playlists:
         tracks = get_tracks(playlistID)
-        if (len(artist_list) == 1) or (len(artist_list) == 2):
+        if len(artist_list) == 1:
             selection = random.choices(tracks, k=7)
-        elif (len(artist_list) == 3) or (len(artist_list) == 4):
+        elif len(artist_list) == 2:
+            selection = random.choices(tracks, k=4)
+        elif len(artist_list) == 3:
             selection = random.choices(tracks, k=5)
+        elif len(artist_list) == 4:
+            selection = random.choices(tracks, k=4)
         elif len(artist_list) == 5:
             selection = random.choices(tracks, k=3)
         for song in selection:

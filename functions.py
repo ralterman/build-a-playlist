@@ -11,12 +11,12 @@ client_credentials_manager = SpotifyClientCredentials(client_id=config.client_id
 sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
 
 
-artist_info = pickle.load(open('artist_info.pkl', 'rb'))
-unique_playlists = pickle.load(open('playlist_ids2.pkl', 'rb'))
+artist_info = pickle.load(open('artist_info_lower.pkl', 'rb'))
+genre_dict = pickle.load(open('genre_dict.pkl', 'rb'))
 new_remastered = pickle.load(open('new_remastered.pkl', 'rb'))
 
 
-final_model = pickle.load(open('final_model.pkl', 'rb'))
+final_model = pickle.load(open('final_model3.pkl', 'rb'))
 
 def get_predictions(artist, list_of_playlists, num_selections):
     rankings = []

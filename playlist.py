@@ -61,13 +61,14 @@ def get_playlists(genre_list):
 # unique_playlists = get_playlists(tqdm(genres))
 # pickle.dump(unique_playlists, open('playlist_ids2.pkl', 'wb'))
 
+non_unique_playlists = pickle.load(open('playlist_ids.pkl', 'rb'))
 
 unique_playlists = pickle.load(open('playlist_ids2.pkl', 'rb'))
 
 # Make sure they are all unique with modified get_playlists function
 count = []
-for g in unique_playlists:
-    count.extend(unique_playlists[g])
+for g in non_unique_playlists:
+    count.extend(non_unique_playlists[g])
 
 print (len(count))
 print (len(set(count)))
@@ -75,8 +76,8 @@ print (len(set(count)))
 
 # Create bar chart of genres and playlist counts
 genre_counts = {}
-for g in unique_playlists:
-    genre_counts[g] = len(unique_playlists[g])
+for g in non_unique_playlists:
+    genre_counts[g] = len(non_unique_playlists[g])
 
 plt.figure(figsize=(15,7))
 sns.barplot(list(genre_counts.keys()), list(genre_counts.values()))
@@ -162,13 +163,15 @@ master.scaled.hist(bins=20)
 plt.ylim(ymin=0, ymax=100000)
 plt.xlim(xmin=0, xmax=.50)
 
-master.total.hist()
+master.total.hist(bins=2000)
+plt.ylim(ymin=0, ymax=300000)
+plt.xlim(xmin=0, xmax=600)
 
 
 master = master[(master.total >= 20) & (master.total <= 500)]
+master.playlist_ID.nunique()
 
-
-bad_rows = master[master['scaled'] > .10].index.tolist()
+bad_rows = master[master['scaled'] > .20].index.tolist()
 
 bad_playlists = []
 for i in bad_rows:
@@ -177,7 +180,7 @@ for i in bad_rows:
 unique_bad_playlists = list(set(bad_playlists))
 
 
-remastered = master[master.scaled <= .10]
+remastered = master[master.scaled <= .20]
 
 remastered['good_scale'] = remastered.playlist_ID.progress_apply(lambda x: 0 if x in unique_bad_playlists else 1)
 
@@ -209,13 +212,13 @@ occurences = occurences.rename(columns={'index':'artist_ID', 'artist_ID':'appear
 occurences.appearances.describe()
 
 occurences.appearances.hist(bins=1000)
-plt.ylim(ymin=0, ymax=5000)
-plt.xlim(xmin=20, xmax=100)
+plt.ylim(ymin=0, ymax=6000)
+plt.xlim(xmin=10, xmax=30)
 
 new_master = pd.merge(remastered, occurences, how='right', on='artist_ID')
 
 
-bad_rows2 = new_master[new_master['appearances'] < 30].index.tolist()
+bad_rows2 = new_master[new_master['appearances'] < 12].index.tolist()
 
 bad_playlists2 = []
 for i in bad_rows2:
@@ -224,7 +227,7 @@ for i in bad_rows2:
 unique_bad_playlists2 = list(set(bad_playlists2))
 
 
-new_master = new_master[new_master.appearances >= 30]
+new_master = new_master[new_master.appearances >= 12]
 
 new_master['contains_nonpopular'] = new_master.playlist_ID.progress_apply(lambda x: 1 if x in unique_bad_playlists2 else 0)
 
@@ -245,29 +248,40 @@ playlist_list = unique[0].tolist()
 
 len(playlist_list)
 
-len(unique_playlists['EDM'])
-len(unique_playlists['Hip-Hop/Rap'])
 
-l = ['a', 'c', 'e', 'g']
-new = {'Rob': ['a', 'b', 'c', 'd'], 'Grace': ['d', 'e', 'f', 'g']}
 
-for name in new:
-    for letter in new[name]:
-        if letter not in l:
-            new[name].remove(letter)
-
-len(set(playlist_list))
-new
-
-playlist_list
-
+genre_dict = {}
 for genre in unique_playlists:
+    g_list = []
     for p in unique_playlists[genre]:
-        if p not in playlist_list:
-            unique_playlists[genre].remove(p)
+        if p in playlist_list:
+            g_list.append(p)
+    genre_dict[genre] = g_list
 
+pickle.dump(genre_dict, open('genre_dict.pkl', 'wb'))
 
-len(unique_playlists['EDM'])
+genre_dict = pickle.load(open('genre_dict.pkl', 'rb'))
+
+count = []
+for g in genre_dict:
+    count.extend(genre_dict[g])
+
+print (len(count))
+print (len(set(count)))
+len(genre_dict['Jazz'])
+len(genre_dict['Hip-Hop/Rap'])
+
+# Create bar chart of genres and playlist counts
+genre_counts = {}
+for g in genre_dict:
+    genre_counts[g] = len(genre_dict[g])
+
+plt.figure(figsize=(15,7))
+sns.barplot(list(genre_counts.keys()), list(genre_counts.values()))
+plt.xticks(rotation=45)
+plt.title('Playlist Count by Search Term (Genre)', fontsize=24)
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
 
 
 
@@ -293,7 +307,8 @@ for artist in tqdm(all_artists):
 pickle.dump(artist_dict, open('artists.pkl', 'wb'))
 
 artist_dict = pickle.load(open('artists.pkl', 'rb'))
-len(artist_dict)
+
+new_remastered
 
 def label_genre(row, genre_dict):
     if row['playlist_ID'] in genre_dict['Alternative/Indie']:
@@ -326,7 +341,9 @@ def label_genre(row, genre_dict):
         return 'Rock'
 
 
-new_remastered['genre'] = new_remastered.progress_apply(lambda row: label_genre(row, unique_playlists), axis=1)
+new_remastered['genre'] = new_remastered.progress_apply(lambda row: label_genre(row, genre_dict), axis=1)
+
+new_remastered = new_remastered.reset_index(drop=True)
 
 
 pickle.dump(new_remastered, open('new_remastered.pkl', 'wb'))
@@ -363,20 +380,19 @@ pickle.dump(artist_info, open('artist_info.pkl', 'wb'))
 
 
 
-new_remastered2.sort_values(by='total')
+new_remastered3 = pickle.load(open('new_remastered.pkl', 'rb'))
 
-new_remastered2 = pickle.load(open('new_remastered2.pkl', 'rb'))
 
-reader = Reader(rating_scale=(0, 1))
-data = Dataset.load_from_df(new_remastered2[['artist_ID', 'playlist_ID', 'scaled']], reader)
+reader = Reader(rating_scale=(0, .2))
+data = Dataset.load_from_df(new_remastered3[['artist_ID', 'playlist_ID', 'scaled']], reader)
 trainset, testset = train_test_split(data, test_size=.01)
 
 
 svd = SVD(n_factors=0, n_epochs=50, lr_all=0.009, reg_all=0.09)
-final = svd.fit(trainset)
-pickle.dump(final, open('final_model2.pkl', 'wb'))
+final2 = svd.fit(trainset)
+pickle.dump(final, open('final_model3.pkl', 'wb'))
 
-predictions = final.test(testset)
+predictions = final2.test(testset)
 
 accuracy.rmse(predictions)
 accuracy.mae(predictions)
@@ -396,13 +412,13 @@ gs4.best_params['rmse']
 
 
 
-artist_info = pickle.load(open('artist_info.pkl', 'rb'))
+artist_info = pickle.load(open('artist_info_cut.pkl', 'rb'))
 
 
 def get_predictions(artist, list_of_playlists, num_selections):
     rankings = []
     for playlist in list_of_playlists:
-        prediction = final.predict(artist, playlist)
+        prediction = final2.predict(artist, playlist)
         if prediction.r_ui != None:
             rankings.append((prediction.iid, prediction.r_ui))
         else:
@@ -411,30 +427,30 @@ def get_predictions(artist, list_of_playlists, num_selections):
     return sorted_rankings
 
 
-drake = get_predictions('3TVXtAsR1Inumwj472S9r4', unique_playlists['Hip-Hop/Rap'], 5)
+drake = get_predictions('3TVXtAsR1Inumwj472S9r4', genre_dict['Hip-Hop/Rap'], 10)
 
 drake
-youngthug = get_predictions('50co4Is1HCEo8bhOyUWKpn', unique_playlists['Hip-Hop/Rap'], 5)
+youngthug = get_predictions('50co4Is1HCEo8bhOyUWKpn', genre_dict['Hip-Hop/Rap'], 10)
 
 youngthug
 
-uzi = get_predictions('4O15NlyKLIASxsJ0PrXPfz', unique_playlists['Hip-Hop/Rap'], 2)
+uzi = get_predictions('4O15NlyKLIASxsJ0PrXPfz', genre_dict['Hip-Hop/Rap'], 2)
 uzi
 
-kidcudi = get_predictions('0fA0VVWsXO9YnASrzqfmYu', unique_playlists['Hip-Hop/Rap'], 2)
+kidcudi = get_predictions('0fA0VVWsXO9YnASrzqfmYu', genre_dict['Hip-Hop/Rap'], 2)
 kidcudi
 
-lupe = get_predictions('01QTIT5P1pFP3QnnFSdsJf', unique_playlists['Hip-Hop/Rap'], 2)
+lupe = get_predictions('01QTIT5P1pFP3QnnFSdsJf', genre_dict['Hip-Hop/Rap'], 2)
 lupe
 
-odesza = get_predictions('21mKp7DqtSNHhCAU2ugvUw', unique_playlists['EDM'], 2)
+odesza = get_predictions('21mKp7DqtSNHhCAU2ugvUw', genre_dict['EDM'], 2)
 odesza
 
-flume = get_predictions('6nxWCVXbOlEVRexSbLsTer', unique_playlists['EDM'], 2)
+flume = get_predictions('6nxWCVXbOlEVRexSbLsTer', genre_dict['EDM'], 2)
 flume
 
 
-garrix = get_predictions('60d24wfXkVzDSfLS6hyCjZ', unique_playlists['EDM'], 2)
+garrix = get_predictions('60d24wfXkVzDSfLS6hyCjZ', genre_dict['EDM'], 2)
 garrix
 
 
@@ -494,13 +510,3 @@ if token:
     results = sp.user_playlist_add_tracks(config.user, new_playlist['id'], playlist_songs)
 else:
     print("Can't get token for", username)
-
-
-
-
-# Get artist name from user in list
-# Convert that artist name into artist ID, get predictions for that artist ID over the genre(s) of playlists
-# Get x amount of playlists depending on input list
-# Get track ID for 5 random tracks in each of those playlists
-# Create new playlist
-# Add tracks to that playlist in random order
