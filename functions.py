@@ -6,18 +6,26 @@ import spotipy
 from surprise import dump
 
 
+# Separate file of essential functions for purposes of running in terminal and on frontend website
 
+
+# Spotify authentication for API calls
 client_credentials_manager = SpotifyClientCredentials(client_id=config.client_id, client_secret=config.client_secret)
 sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
 
 
+# Load in essential variables (dictionaries, dataframes, lists, etc.)
 artist_info = pickle.load(open('artist_info_lower.pkl', 'rb'))
 genre_dict = pickle.load(open('genre_dict.pkl', 'rb'))
 new_remastered = pickle.load(open('new_remastered.pkl', 'rb'))
 
 
+# Final model for SVD recommendation algorithm
 final_model = pickle.load(open('final_model3.pkl', 'rb'))
 
+
+
+# Get recommended playlists based on artist and playlists in the artist's top genre
 def get_predictions(artist, list_of_playlists, num_selections):
     rankings = []
     for playlist in list_of_playlists:
@@ -31,6 +39,7 @@ def get_predictions(artist, list_of_playlists, num_selections):
 
 
 
+# Get the songs from a playlist, disregarding cover and piano versions of songs
 def get_tracks(playlist_id):
     bad = ['Piano Arrangement', 'Piano Version', '(Cover)', '[Cover]']
     songs = []
