@@ -148,3 +148,6 @@ config.py
 
 # pickled files
 *.pkl
+
+# miscellaneous
+.cache-1tudjpbf248t6jba6lijm44hw
