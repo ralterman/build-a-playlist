@@ -17,8 +17,9 @@ Allow for users to create unique Spotify playlists of songs similiar to the ones
   * Will be using both the Client Credentials Flow and Authorization Code Flow
 
 <p align="center"><img src="https://github.com/ralterman/playlist.append/blob/master/images/authorization.png"></p>
+<p align="center"><img src="https://github.com/ralterman/playlist.append/blob/master/images/authorization2.png"></p>
 
-## Data
+## Data Preprocessing / Feature Engineering
 * Started by scraping all playlists resulting from the queries of 126 genres from sp.recommendation_genre_seeds()
   * Can capture at most 5,000 results from each query*
 * Cut that number down to 14 of what I deemed as the most popular genres after some EDA, Google searches, and my own intuition in efforts   to lower the amount of data due to time constraints
@@ -28,6 +29,12 @@ Allow for users to create unique Spotify playlists of songs similiar to the ones
   * Set maximum percentage of songs by/with an artist in each playlist at 20%, meaning each playlist had to have at least 5 different         artists (got rid of playlists where greater percentages existed)
   * Removed all playlists that had less than 20 songs or greater than 500 songs
   * Ignored cover and piano versions of songs
+* Ended up with __6,706 unique playlists and 17,421 unique artists__
 
 <p align="center"><img src="https://github.com/ralterman/playlist.append/blob/master/images/genre_distribution.png"></p>
 
+## More Feature Engineering
+* Created dictionary, where the 14 genres were the keys and the values were a list of playlists in that genre to use for the predictions     function
+* Marked each artist with a list of genres of the playlists he or she is in, ordered that list by occurences of each genre, and kept the     top occuring genre
+* Created second dictionary with the artist's name as the key and a tuple of his or her artist ID and top genre as the value
+  * This dictionary is used to convert user input to the artist ID and recommend playlists based on that artist's top genre
