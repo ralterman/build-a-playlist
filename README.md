@@ -48,5 +48,11 @@ Optimal Parameters After Multiple Grid Searches:
 * n_factors = 0, n_epochs = 50, lr_all = 0.009, reg_all = 0.09
 * RMSE = 0.0146 (on scale of 0-1)
 
+## How It Works
+* Prediction function takes in artist ID, list of playlists in that artist's top genre, and the desired # of recommendations
+* Returns sorted list of recommended playlists based on actual or estimated weights
+* Separate functions are used to grab the songs from those playlists, keep a random number from each of them, and put them into a newly     created Spotify playlist for the user
+
 ---
 ## [Demo](https://drive.google.com/file/d/11WMAuTqxGd26vTufGzA0QuFdOQsGF4Gu/view?usp=sharing)
+Created frontend site for local usage with [Streamlit](https://docs.streamlit.io/) — an open-source Python library used to create custom web-apps for machine learning.
