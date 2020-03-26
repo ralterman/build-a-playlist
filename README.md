@@ -11,10 +11,10 @@ Allow for users to create unique Spotify playlists of songs similiar to the ones
 4. Formulates new playlist from those songs
 
 ## Prerequisites
-* [Spotipy](https://spotipy.readthedocs.io/en/2.9.0/ "Spotipy") — Python library for the Spotify Web API
-  * Follow the instructions to install and get authorized before use
-  * Create and register your app on [Spotify for Developers](https://developer.spotify.com/dashboard/ "Spotify for Developers") to obtain     your Client ID and Client Secret
-  * Will be using both the Client Credentials Flow and Authorization Code Flow
+[Spotipy](https://spotipy.readthedocs.io/en/2.9.0/ "Spotipy") — Python library for the Spotify Web API
+ * Follow the instructions to install and get authorized before use
+ * Create and register your app on [Spotify for Developers](https://developer.spotify.com/dashboard/ "Spotify for Developers") to obtain      your Client ID and Client Secret
+ * Will be using both the Client Credentials Flow and Authorization Code Flow
 
 <p align="center"><img src="https://github.com/ralterman/playlist.append/blob/master/images/authorization.png"></p>
 <p align="center"><img src="https://github.com/ralterman/playlist.append/blob/master/images/authorization2.png"></p>
