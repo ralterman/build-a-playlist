@@ -60,5 +60,5 @@ Optimal Parameters After Multiple Grid Searches:
 * Separate functions are used to grab the songs from those playlists, keep a random number of songs from each of them, and put them into a   newly created Spotify playlist for the user
 
 ---
-## [Demo](https://drive.google.com/file/d/11WMAuTqxGd26vTufGzA0QuFdOQsGF4Gu/view?usp=sharing)
+## [Demo](https://youtu.be/x-ZXiC06JKY)
 Created frontend site for local usage with [Streamlit](https://docs.streamlit.io/) — an open-source Python library used to create custom web-apps for machine learning (see Demo link).
