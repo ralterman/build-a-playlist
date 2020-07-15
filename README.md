@@ -11,7 +11,7 @@ Allow for users to create unique Spotify playlists of songs similiar to the ones
 4. Formulates new playlist from those songs
 
 ## File Directory
-* [playlist.py](https://github.com/ralterman/playlist.append/blob/master/playlist.py "playlist.py File") - full code for playlist builder   / recommendation system
+* [playlist_builder.py](https://github.com/ralterman/playlist.append/blob/master/playlist_builder.py "playlist_builder.py File") - full code for playlist builder   / recommendation system
 * [functions.py](https://github.com/ralterman/playlist.append/blob/master/functions.py "functions.py File") - just the essential functions   for running the program
 * [main.py](https://github.com/ralterman/playlist.append/blob/master/main.py "main.py File") - main function to run the program in the       terminal
 * [frontend.py](https://github.com/ralterman/playlist.append/blob/master/frontend.py "frontend.py") - code for Streamlit frontend site
