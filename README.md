@@ -4,7 +4,7 @@
 ## Goal
 Allow for users to create unique Spotify playlists of songs similiar to the ones they already love, simply by entering the name of an artist(s) — discovering new music in the process.
 
-## Premise
+## Premis
 1. User inputs artist(s)
 2. Recommendation system suggests playlists based on input
 3. Takes random songs from a random selection of those recommended playlists
