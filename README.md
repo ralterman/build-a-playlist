@@ -1,7 +1,7 @@
 # playlist.append()
 ### _Spotify playlist builder via collaborative filtering recommendation system_
 
-## Goal
+## Goals
 Allow for users to create unique Spotify playlists of songs similiar to the ones they already love, simply by entering the name of an artist(s) — discovering new music in the process.
 
 ## Premise
