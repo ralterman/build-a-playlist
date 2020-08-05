@@ -16,7 +16,7 @@ Allow for users to create unique Spotify playlists of songs similiar to the ones
 * [main.py](https://github.com/ralterman/playlist.append/blob/master/main.py "main.py File") - main function to run the program in the       terminal
 * [frontend.py](https://github.com/ralterman/playlist.append/blob/master/frontend.py "frontend.py") - code for Streamlit frontend site
 
-## Prerequisite
+## Prerequisites
 [Spotipy](https://spotipy.readthedocs.io/en/2.9.0/ "Spotipy") — Python library for the Spotify Web API
  * Follow the instructions to install and get authorized before use
  * Create and register your app on [Spotify for Developers](https://developer.spotify.com/dashboard/ "Spotify for Developers") to obtain      your Client ID and Client Secret
