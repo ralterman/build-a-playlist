@@ -45,7 +45,7 @@ Allow for users to create unique Spotify playlists of songs similiar to the ones
 * Created second dictionary with the artist's name as the key and a tuple of his/her artist ID and top genre as the value
   * This dictionary is used to convert user input to the artist ID and recommend playlists based on that artist's top genre
 
-## Models
+## Model
 Collaborative Filtering with [Surprise SVD](https://surprise.readthedocs.io/en/stable/getting_started.html "Surprise SVD")
 * Recommender that deals with rating data — in this case ratings = weights (percentage of songs in each playlist by/with that artist)
 * Fills zeros in sparse matrix with estimated values given surrounding values
