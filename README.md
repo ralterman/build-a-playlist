@@ -25,7 +25,7 @@ Allow for users to create unique Spotify playlists of songs similiar to the ones
 <p align="center"><img src="https://github.com/ralterman/playlist.append/blob/master/images/authorization.png"></p>
 <p align="center"><img src="https://github.com/ralterman/playlist.append/blob/master/images/authorization2.png"></p>
 
-## Data Preprocessing & Feature Engineering
+## Data Preprocessing / Feature Engineering
 * Started by scraping all playlists resulting from the queries of 126 genres from sp.recommendation_genre_seeds()
   * Can capture at most 5,000 results from each query*
 * Cut that number down to 14 of what I deemed as the most popular genres after some EDA, Google searches, and my own intuition in efforts   to lower the amount of data due to time constraints
